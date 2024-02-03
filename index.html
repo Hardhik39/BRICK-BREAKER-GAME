@@ -1,0 +1,227 @@
+<html>
+    
+<canvas id="mycanvas" width="1500" height="900"></canvas>
+    <script src="ball.js"></script>
+	<script src="bar.js"></script>
+	<script src="brick.js"></script>
+<script>
+    
+    var g_canvas = document.getElementById("mycanvas");
+    var g_context = g_canvas.getContext("2d");
+    var g_FrameRate = 30;
+    var g_TimeInterval = 1000 / g_FrameRate;
+	
+	
+	var g_Rows=7;
+	var g_Columns=2;
+	var g_count=0;
+	var g_points=0;
+	
+	
+	var brick_array= new Array(g_Rows*g_Columns);
+	
+	var brick_arr_len=brick_array.length;
+	var g_brick_x=0;
+	var g_brick_y=100;
+	var g_brick_width=200;
+	var g_brick_height=40;
+	
+    var circleSpeed =0;
+	var closestX = 0;
+    var closestY = 0;
+    var collisionVectorX =0; 
+    var collisionVectorY =0;
+	var reflectionVectorX = 0;
+    var reflectionVectorY =0; 
+	var dotProduct =0; 
+    var reflectionX = 0;
+    var reflectionY =0; 
+    var reflectionMagnitude =0; 
+	var distance =0;
+ var a= setInterval(GameLoop, g_TimeInterval);
+    function GameLoop()  
+    {
+
+	    ball.m_ball_canvas_collision(g_canvas);
+		ball.bar.m_bar_canvas_collision(g_canvas);
+		
+		ball.m_move_ball();
+		ball.bar.m_bar_move_button();
+		
+		ball.m_bar_ball_collision();
+		f_ball_brick_collision();
+		
+		
+		
+        //canvas
+        f_ClearCanvas();
+		f_draw();
+		ball.m_drawball(g_context);
+		
+		f_Text_Draw();
+		
+        
+        
+    }
+    f_brick();
+
+	this.ball=new c_ball();
+	function f_brick()
+	{
+		for(var i=0;i<g_Columns;i++)
+			{
+				g_brick_x=50;
+				for(var j=0;j<g_Rows;j++)
+				{		
+					
+					brick_array[g_count]=new c_brick(g_brick_x,g_brick_y);
+					g_count++;
+					g_brick_x+=200;
+				}
+				g_brick_y+=g_brick_height;
+				
+					
+				
+					
+			}
+	}
+	
+	function f_draw()
+	{
+		for(var i=0;i<brick_arr_len;i+=1)
+			{
+				brick_array[i].m_drawbrick(g_context);
+			}
+	}
+	
+	function f_ball_brick_collision()
+	{
+	   for(var i=0;i<brick_arr_len;i+=1)
+		   {
+			   circleSpeed = Math.sqrt(ball.ball_movespeed_x * ball.ball_movespeed_x  + ball.ball_movespeed_y  * ball.ball_movespeed_y );
+
+  
+  
+                  closestX = Math.max(brick_array[i].brick_X, Math.min(ball.ball_x, brick_array[i].brick_X + brick_array[i].brick_width));
+					
+                  closestY = Math.max(brick_array[i].brick_Y, Math.min(ball.ball_y, brick_array[i].brick_Y + brick_array[i].brick_height));
+
+  
+                  collisionVectorX = closestX - ball.ball_x;
+                  collisionVectorY = closestY - ball.ball_y;
+
+  
+                  distance = Math.sqrt(collisionVectorX * collisionVectorX + collisionVectorY * collisionVectorY);
+
+           if (distance < ball.ball_radius) 
+		   {
+    
+                reflectionVectorX = collisionVectorX / distance;
+                reflectionVectorY = collisionVectorY / distance;
+
+  
+                dotProduct = ball.ball_movespeed_x * reflectionVectorX + ball.ball_movespeed_y * reflectionVectorY;
+
+    
+               reflectionX = ball.ball_movespeed_x - 2 * dotProduct * reflectionVectorX;
+               reflectionY = ball.ball_movespeed_y - 2 * dotProduct * reflectionVectorY;
+
+    
+               reflectionMagnitude = Math.sqrt(reflectionX * reflectionX + reflectionY * reflectionY);
+	  
+               reflectionX = (reflectionX / reflectionMagnitude) * circleSpeed;
+               reflectionY = (reflectionY / reflectionMagnitude) * circleSpeed;
+
+    
+               ball.ball_movespeed_x = reflectionX;
+               ball.ball_movespeed_y = reflectionY;
+               brick_array[i].brick_X = 0;
+               brick_array[i].brick_Y = 0;
+               brick_array[i].brick_width = 0;
+               brick_array[i].brick_height = 0;
+			   g_points++;
+               
+			   
+		   }
+
+	}
+	}
+	
+		function f_Text_Draw()
+        {
+            g_context.font="30px Arial";
+			g_context.fillStyle="#fdfdfd";
+            //g_context.fillText("  "+,1250,60);
+			if(ball.ball_y>g_canvas.height)
+				{
+					g_context.font="100px Arial";
+					g_context.fillText("GAME OVER ",450,450);
+					clearInterval(a);
+				}
+			if(ball.jump_flag==0)
+				{
+		    g_context.fillText("PRESS 'SPACE BAR' TO START GAME 'A'&'D'TO  MOVE THE BAR",250,60);
+				}
+			if(g_points==g_Rows*g_Columns)
+				{
+		            g_context.font="100px Arial";
+					g_context.fillText("YOU WON ",450,450);
+					clearInterval(a);
+				}
+        }
+  
+   
+    function f_ClearCanvas() 
+    {
+      g_context.clearRect(0, 0, g_canvas.width, g_canvas.height);
+      g_context.strokeRect(0, 0, g_canvas.width, g_canvas.height);
+		g_context.fillStyle="#000000"
+	  g_context.fillRect(0, 0, g_canvas.width, g_canvas.height);
+	}
+    
+    
+    
+    
+    function f_OnKeyDown(l_event)
+    {
+        
+			
+        if(l_event.keyCode == 65)
+           {
+               ball.bar.MoveLeft_flag  = 1;
+           }
+        if(l_event.keyCode == 68)
+           {
+                ball.bar.MoveRight_flag = 1;
+           }
+        
+        if(l_event.keyCode == 32)
+           {
+               ball.jump_flag = 1;
+           }
+			
+    }
+    
+    function f_OnKeyUp(l_event)
+    {
+		
+			
+        
+        if(l_event.keyCode == 65)
+           {
+                ball.bar.MoveLeft_flag  = 0;
+           }
+        if(l_event.keyCode == 68)
+           {
+                ball.bar.MoveRight_flag = 0;
+                
+           }
+			
+
+    }
+    
+    window.addEventListener("keydown",f_OnKeyDown);
+    window.addEventListener("keyup",f_OnKeyUp);
+    
+    
+    </script></html>
